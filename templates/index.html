@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Car Price Predictor</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+
+    <style>
+        body { background-color: #121212; color: white; }
+        .card { margin-top: 50px; color: black; }
+    </style>
+</head>
+
+<body class="bg-dark">
+<div class="container">
+    <div class="card">
+        <div class="card-header text-center">
+            <h2>Car Price Predictor</h2>
+        </div>
+
+        <div class="card-body">
+            <form id="predictForm">
+
+                <div class="form-group">
+                    <label>Company</label>
+                    <select class="form-control" id="company" name="company" required>
+                        <option value="">Select Company</option>
+                        {% for company in companies %}
+                        <option value="{{ company }}">{{ company }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Car Model</label>
+                    <select class="form-control" id="car_models" name="car_models" required>
+                        <option value="">Select Model</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Year</label>
+                    <select class="form-control" name="year" required>
+                        {% for year in years %}
+                        <option value="{{ year }}">{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Fuel Type</label>
+                    <select class="form-control" name="fuel_type" required>
+                        {% for fuel in fuel_types %}
+                        <option value="{{ fuel }}">{{ fuel }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Kilometers Driven</label>
+                    <input type="number" class="form-control" name="kilo_driven" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Predict Price
+                </button>
+            </form>
+
+            <h4 class="text-center mt-3" id="prediction"></h4>
+        </div>
+    </div>
+</div>
+
+<script>
+    const companyModelMap = {{ company_model_map | tojson }};
+
+    document.getElementById('company').addEventListener('change', function () {
+        const models = companyModelMap[this.value] || [];
+        const modelSelect = document.getElementById('car_models');
+
+        modelSelect.innerHTML = '<option value="">Select Model</option>';
+        models.forEach(model => {
+            modelSelect.innerHTML += `<option value="${model}">${model}</option>`;
+        });
+    });
+
+    document.getElementById('predictForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        document.getElementById('prediction').innerText = "Predicting...";
+
+        const response = await fetch('/predict', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        document.getElementById('prediction').innerText =
+            result.price ? `Estimated Price: ₹${result.price}` : result.error;
+    });
+</script>
+</body>
+</html>
